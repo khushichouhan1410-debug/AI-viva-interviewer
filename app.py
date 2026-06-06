@@ -43,32 +43,33 @@ def evaluate_answer(question, user_transcript):
     }}
     """
     try:
-        response = cohere_client.generate(
+        # 🔥 FIXED: Using the updated .chat() method instead of deprecated .generate()
+        response = cohere_client.chat(
             model='command-r-plus',
-            prompt=prompt,
-            max_tokens=300,
+            message=prompt,  # Changed from 'prompt' to 'message'
             temperature=0.3
         )
-        clean_text = response.generations[0].text.strip()
+        # 🔥 FIXED: Extracting text using response.text instead of generations[0].text
+        clean_text = response.text.strip()
+        
         if clean_text.startswith("```"):
             clean_text = clean_text.split("\n", 1)[1].rsplit("\n", 1)[0].strip()
         return json.loads(clean_text)
     except Exception as e:
         return {
-            "score": 5,
-            "strengths": ["Answer received successfully."],
-            "weaknesses": [f"Standard evaluation complete. (Details: {str(e)})"]
+            "score": 0,
+            "strengths": ["System error occurred during evaluation."],
+            "weaknesses": [f"Error details: {str(e)}"]
         }
 
 # =====================================================================
-# 🖥️ PERSON A & C: FRONTEND LAYOUT & QUESTION MODES
+# 🖥️ FRONTEND LAYOUT & QUESTION MODES
 # =====================================================================
 st.set_page_config(page_title="AI Job-Ready Hub", page_icon="🎙️", layout="wide")
 
 st.title("🎙️ AI Viva Interviewer & Career Readiness Tool")
 st.caption("IEEE AI FOR IMPACT 2.0 - Live Sandbox")
 
-# Sidebar Menu for Modules
 st.sidebar.title("📌 Dashboard Navigation")
 app_mode = st.sidebar.radio(
     "Choose Module:",
@@ -78,7 +79,6 @@ app_mode = st.sidebar.radio(
 if app_mode == "AI Mock Interview":
     st.header("🤖 Live AI Viva Session")
     
-    # Person C's Interview Setup Sidebar
     st.sidebar.markdown("---")
     st.sidebar.title("⚙️ Setup Your Interview")
     mode = st.sidebar.radio("Choose Question Mode:", ["Predefined", "Custom Question"])
@@ -96,7 +96,6 @@ if app_mode == "AI Mock Interview":
     st.markdown(f"### 📋 Current Active Question:")
     st.info(f"**{current_question}**" if current_question else "*Waiting for you to enter/select a question...*")
 
-    # Native Audio Input Widget
     st.write("Click below to record your response:")
     audio_file = st.audio_input("Record your answer")
     
@@ -110,9 +109,6 @@ if app_mode == "AI Mock Interview":
         with st.spinner("🧠 AI is thinking (Evaluating via Cohere)..."):
             ai_response = evaluate_answer(current_question, transcript)
             
-            # =========================================================
-            # 🎯 BUG FIX: Handled List rendering using .join() beautifully
-            # =========================================================
             st.divider()
             col1, col2 = st.columns([1, 3])
             
@@ -120,11 +116,9 @@ if app_mode == "AI Mock Interview":
                 st.metric(label="AI Score", value=f"{ai_response.get('score', 0)}/10")
                 
             with col2:
-                # Fixing lists so they don't print with raw brackets []
                 strengths_list = ai_response.get('strengths', [])
                 weaknesses_list = ai_response.get('weaknesses', [])
                 
-                # Convert list elements into clean bullet points
                 strengths_text = "\n".join([f"- {s}" for s in strengths_list])
                 weaknesses_text = "\n".join([f"- {w}" for w in weaknesses_list])
                 
@@ -133,7 +127,6 @@ if app_mode == "AI Mock Interview":
 
             st.info("💡 Pro-tip: If the AI missed a keyword, try re-answering using the 'Manual Override' box below.")
 
-# Dummy Placeholders for other modules to keep UI clean
 elif app_mode == "Resume Analyzer":
     st.header("📝 AI Resume Analysis")
     st.file_uploader("Upload Resume", type=["pdf", "txt"])
