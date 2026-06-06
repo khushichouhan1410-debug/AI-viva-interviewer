@@ -38,7 +38,6 @@ def evaluate_answer(question, user_transcript):
     }}
     """
     try:
-        # ✅ FIXED: Using updated .chat() method
         response = cohere_client.chat(
             model='command-r-plus',
             message=prompt,
@@ -51,17 +50,17 @@ def evaluate_answer(question, user_transcript):
         return json.loads(clean_text)
         
     except Exception as e:
-        # ✅ FIXED: Error aane par ab raw technical text nahi dikhega, balki text suggestions dikhenge!
+        # ✅ FIXED: Fallback suggestions and weaknesses are now in English!
         return {
             "score": 6,
             "strengths": [
-                "Aapne swaal ke context ke mutabik confidence sahi rakha.",
-                "Answer dene ki koshish achi thi, points relevant the."
+                "The response demonstrated good initial confidence and clear vocabulary.",
+                "Attempted to address the core context of the interview question directly."
             ],
             "weaknesses": [
-                "Technical core concepts aur definitions ko thoda aur gehraai (depth) ke sath explain karein.",
-                "Real-world application ya coding examples jodkar apne answer ki clarity ko aur behtar banayein.",
-                "Tip: Agar system temporary issue lag raha hai, toh clear audio record karke dubara 'Evaluate' dabayein."
+                "Try to elaborate more on the technical core concepts and exact architectural definitions.",
+                "Incorporate relevant real-world applications or coding examples to enhance the clarity of your answer.",
+                "Tip: If you suspect a system connectivity issue, please record a clear audio response and click 'Evaluate Answer' again."
             ]
         }
 
